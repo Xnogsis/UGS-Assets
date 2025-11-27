@@ -3613,7 +3613,7 @@ quat4.str=function(a){return"["+a[0]+", "+a[1]+", "+a[2]+", "+a[3]+"]"};
 		var self = this;
 		if (this.isWKWebView)
 		{
-			this.fetchLocalFileViaCordovaAsText("data.js", function (str)
+			this.fetchLocalFileViaCordovaAsText("https://cdn.jsdelivr.net/gh/Arjun99ab/ovo@main/1.4.5/data.js", function (str)
 			{
 				self.loadProject(JSON.parse(str));
 			}, function (err)
@@ -19517,7 +19517,7 @@ cr.plugins_.Browser = function(runtime)
 				offlineScriptReady = true;
 				checkReady()
 			};
-			offlineClientScript.src = "offlineClient.js";
+			offlineClientScript.src = "https://cdn.jsdelivr.net/gh/Arjun99ab/ovo@main/1.4.5/offlineClient.js";
 			document.head.appendChild(offlineClientScript);
 		}
 	});
