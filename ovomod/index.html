@@ -47,9 +47,9 @@
 		}
     </style>
 	
-	<link href="https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@21a2709b9f89d7ce24ec5f6263f72c7c0da1d143/ovomod/animate.css" rel="stylesheet" type="text/css" />
-	<link href="https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@21a2709b9f89d7ce24ec5f6263f72c7c0da1d143/ovomod/hmmg_layoutTransition.css" rel="stylesheet" type="text/css" />
-	<link href="https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@21a2709b9f89d7ce24ec5f6263f72c7c0da1d143/ovomod/jquery.gritter.css" rel="stylesheet" type="text/css" />
+	<link href="animate.css" rel="stylesheet" type="text/css" />
+	<link href="hmmg_layoutTransition.css" rel="stylesheet" type="text/css" />
+	<link href="jquery.gritter.css" rel="stylesheet" type="text/css" />
 
 </head> 
  
@@ -88,77 +88,66 @@
 	<!-- Pages load faster with scripts at the bottom -->
 	
 	<!-- Construct 2 exported games require jQuery. -->
-	<script src="https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@21a2709b9f89d7ce24ec5f6263f72c7c0da1d143/ovomod/jquery-3.4.1.min.js"></script>
+	<script src="jquery-3.4.1.min.js"></script>
 
-	<script src="https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@21a2709b9f89d7ce24ec5f6263f72c7c0da1d143/ovomod/GameAnalytics.js"></script>
-	<script src="https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@21a2709b9f89d7ce24ec5f6263f72c7c0da1d143/ovomod/Tween.js"></script>
-	<script src="https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@21a2709b9f89d7ce24ec5f6263f72c7c0da1d143/ovomod/html2canvas.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@21a2709b9f89d7ce24ec5f6263f72c7c0da1d143/ovomod/jquery.gritter.js"></script>
-	<script src="https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@21a2709b9f89d7ce24ec5f6263f72c7c0da1d143/ovomod/howler.js"></script>
+	<script src="GameAnalytics.js"></script>
+	<script src="Tween.js"></script>
+	<script src="html2canvas.min.js"></script>
+	<script src="jquery.gritter.js"></script>
+	<script src="howler.js"></script>
 
 	
     <!-- The runtime script.  You can rename it, but don't forget to rename the reference here as well.
     This file will have been minified and obfuscated if you enabled "Minify script" during export. -->
-	<script src="https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@21a2709b9f89d7ce24ec5f6263f72c7c0da1d143/ovomod/c2runtime.js"></script>
+	<script src="c2runtime.js"></script>
 
-<script>
-    // Start the Construct 2 project running on window load.
-    jQuery(document).ready(function ()
-    {			
-        // Create new runtime using the c2canvas
-        cr_createRuntime("c2canvas");
-    });
-    
-    // Pause and resume on page becoming visible/invisible
-    function onVisibilityChanged() {
-        if (document.hidden || document.mozHidden || document.webkitHidden || document.msHidden)
-            cr_setSuspended(true);
-        else
-            cr_setSuspended(false);
-    };
-    
-    document.addEventListener("visibilitychange", onVisibilityChanged, false);
-    document.addEventListener("mozvisibilitychange", onVisibilityChanged, false);
-    document.addEventListener("webkitvisibilitychange", onVisibilityChanged, false);
-    document.addEventListener("msvisibilitychange", onVisibilityChanged, false);
-    
-    function OnRegisterSWError(e)
-    {
-        console.warn("Failed to register service worker: ", e);
-    };
-    
-    // Runtime calls this global method when ready to start caching (i.e. after startup).
-    // This registers the service worker which caches resources for offline support.
-    window.C2_RegisterSW = function C2_RegisterSW()
-    {
-        // Skip service worker for local development
-        const isLocal = window.location.protocol === "file:" || 
-                       window.location.hostname === "localhost" || 
-                       window.location.hostname === "127.0.0.1" ||
-                       window.location.hostname.includes("127.0.0");
-        
-        if (isLocal) {
-            console.log("Service Worker registration skipped (local environment)");
-            return;
-        }
-        
-        if (!navigator.serviceWorker)
-            return;		// no SW support, ignore call
-        
-        try {
-            navigator.serviceWorker.register("https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@21a2709b9f89d7ce24ec5f6263f72c7c0da1d143/ovomod/sw.js", { scope: "./" })
-            .then(function (reg)
-            {
-                console.log("Registered service worker on " + reg.scope);
-            })
-            .catch(OnRegisterSWError);
-        }
-        catch (e)
-        {
-            OnRegisterSWError(e);
-        }
-    };
-</script>
+    <script>
+		// Start the Construct 2 project running on window load.
+		jQuery(document).ready(function ()
+		{			
+			// Create new runtime using the c2canvas
+			cr_createRuntime("c2canvas");
+		});
+		
+		// Pause and resume on page becoming visible/invisible
+		function onVisibilityChanged() {
+			if (document.hidden || document.mozHidden || document.webkitHidden || document.msHidden)
+				cr_setSuspended(true);
+			else
+				cr_setSuspended(false);
+		};
+		
+		document.addEventListener("visibilitychange", onVisibilityChanged, false);
+		document.addEventListener("mozvisibilitychange", onVisibilityChanged, false);
+		document.addEventListener("webkitvisibilitychange", onVisibilityChanged, false);
+		document.addEventListener("msvisibilitychange", onVisibilityChanged, false);
+		
+		function OnRegisterSWError(e)
+		{
+			console.warn("Failed to register service worker: ", e);
+		};
+		
+		// Runtime calls this global method when ready to start caching (i.e. after startup).
+		// This registers the service worker which caches resources for offline support.
+		window.C2_RegisterSW = function C2_RegisterSW()
+		{
+			if (!navigator.serviceWorker)
+				return;		// no SW support, ignore call
+			
+			try {
+				navigator.serviceWorker.register("sw.js", { scope: "./" })
+				.then(function (reg)
+				{
+					console.log("Registered service worker on " + reg.scope);
+				})
+				.catch(OnRegisterSWError);
+			}
+			catch (e)
+			{
+				OnRegisterSWError(e);
+			}
+		};
+    </script>
 	<script type="text/javascript">
 		
         var VERSION = VERSION || (function(){
@@ -175,6 +164,6 @@
             };
         }());
     </script>
-    <script src="https://cdn.jsdelivr.net/gh/Arjun99ab/ovo@main/src/modloaders/modloader.js" id="modloader" type="module" defer></script>
+    <script src="../src/modloaders/modloader.js" id="modloader" type="module" defer></script>
 </body> 
 </html> 

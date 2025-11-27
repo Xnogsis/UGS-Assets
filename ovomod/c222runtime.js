@@ -4249,28 +4249,40 @@ quat4.str=function(a){return"["+a[0]+", "+a[1]+", "+a[2]+", "+a[3]+"]"};
 		else if (this.loaderstyle === 4)	// c2 splash
 		{
 			var loaderC2logo_1024 = new Image();
+			loaderC2logo_1024.crossOrigin = "anonymous";
 			loaderC2logo_1024.src = "";
 			var loaderC2logo_512 = new Image();
+			loaderC2logo_512.crossOrigin = "anonymous";
 			loaderC2logo_512.src = "";
 			var loaderC2logo_256 = new Image();
+			loaderC2logo_256.crossOrigin = "anonymous";
 			loaderC2logo_256.src = "";
 			var loaderC2logo_128 = new Image();
+			loaderC2logo_128.crossOrigin = "anonymous";
 			loaderC2logo_128.src = "";
 			var loaderPowered_1024 = new Image();
+			loaderPowered_1024.crossOrigin = "anonymous";
 			loaderPowered_1024.src = "";
 			var loaderPowered_512 = new Image();
+			loaderPowered_512.crossOrigin = "anonymous";
 			loaderPowered_512.src = "";
 			var loaderPowered_256 = new Image();
+			loaderPowered_256.crossOrigin = "anonymous";
 			loaderPowered_256.src = "";
 			var loaderPowered_128 = new Image();
+			loaderPowered_128.crossOrigin = "anonymous";
 			loaderPowered_128.src = "";
 			var loaderWebsite_1024 = new Image();
+			loaderWebsite_1024.crossOrigin = "anonymous";
 			loaderWebsite_1024.src = "";
 			var loaderWebsite_512 = new Image();
+			loaderWebsite_512.crossOrigin = "anonymous";
 			loaderWebsite_512.src = "";
 			var loaderWebsite_256 = new Image();
+			loaderWebsite_256.crossOrigin = "anonymous";
 			loaderWebsite_256.src = "";
 			var loaderWebsite_128 = new Image();
+			loaderWebsite_128.crossOrigin = "anonymous";
 			loaderWebsite_128.src = "";
 			this.loaderlogos = {
 				logo: [loaderC2logo_1024, loaderC2logo_512, loaderC2logo_256, loaderC2logo_128],
@@ -7780,6 +7792,16 @@ quat4.str=function(a){return"["+a[0]+", "+a[1]+", "+a[2]+", "+a[3]+"]"};
 		}
 		else
 		{
+			// If the source is not a data: or blob: URL, set crossOrigin so
+			// the browser requests CORS-friendly responses. This lets WebGL
+			// upload textures from CDNs (like jsDelivr) that allow cross-origin
+			// requests. We avoid setting crossOrigin for data/blob URIs.
+			if (typeof src === "string" && src.substr(0, 5) !== "data:" && src.substr(0, 5) !== "blob:")
+			{
+				try { img.crossOrigin = "anonymous"; } catch (e) {}
+				try { img["crossOrigin"] = "anonymous"; } catch (e) {}
+			}
+
 			img.src = src;
 		}
 	};
