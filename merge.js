@@ -10,6 +10,70 @@
   const config = Object.assign({}, defaultConfig, window.fileMergerConfig || {});
   window.mergedFiles = window.mergedFiles || {};
   const mergeStatus = {};
+  const mergeProgress = {};
+  const loadingDiv = document.createElement('div');
+  loadingDiv.id = 'file-merger-loading';
+  loadingDiv.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 30px 40px;
+    border-radius: 10px;
+    font-family: monospace;
+    font-size: 16px;
+    z-index: 10000;
+    min-width: 300px;
+    text-align: center;
+  `;
+  
+  const loadingContent = document.createElement('div');
+  loadingContent.id = 'file-merger-content';
+  loadingDiv.appendChild(loadingContent);
+  
+  document.body.appendChild(loadingDiv);
+
+  function updateLoadingDisplay() {
+    const lines = ['<div style="font-size: 18px; margin-bottom: 15px;">loading...</div>'];
+    
+    config.files.forEach(file => {
+      const status = mergeStatus[file.name] || 'waiting';
+      const progress = mergeProgress[file.name] || { current: 0, total: file.parts };
+      let statusText = '';
+      let color = '#888';
+      
+      if (status === 'merging') {
+        statusText = ` merging... ${progress.current}/${progress.total}`;
+        color = '#ffa500';
+      } else if (status === 'ready') {
+        statusText = 'done';
+        color = '#00ff00';
+      } else if (status === 'failed') {
+        statusText = 'failed';
+        color = '#ff0000';
+      } else {
+        statusText = 'Waiting...';
+      }
+      
+      lines.push(`<div style="margin: 8px 0; color: ${color};">${file.name}: ${statusText}</div>`);
+    });
+    
+    loadingContent.innerHTML = lines.join('');
+    
+    const allDone = config.files.every(file => 
+      mergeStatus[file.name] === 'ready' || mergeStatus[file.name] === 'failed'
+    );
+    
+    if (allDone) {
+      setTimeout(() => {
+        loadingDiv.style.opacity = '0';
+        loadingDiv.style.transition = 'opacity 0.5s';
+        setTimeout(() => loadingDiv.remove(), 500);
+      }, 1000);
+    }
+  }
 
   function log(...args) {
     if (config.debug) console.log('[FileMerger]', ...args);
@@ -34,6 +98,10 @@
   }
 
   async function mergeSplitFiles(filePath, numParts) {
+    const fileName = filePath.split('/').pop();
+    mergeProgress[fileName] = { current: 0, total: numParts };
+    updateLoadingDisplay();
+    
     try {
       const parts = [];
       for (let i = 1; i <= numParts; i++) {
@@ -41,22 +109,24 @@
       }
 
       log(`Merging ${filePath} from ${numParts} parts...`);
-
-      // Fetch parts using the original fetch to bypass interception
-      const responses = await Promise.all(
-        parts.map(part => window.originalFetch(part))
-      );
-
-      for (let i = 0; i < responses.length; i++) {
-        if (!responses[i].ok) {
-          if (responses[i].status === 403 || responses[i].status === 404) {
-            throw new Error(`Part missing or blocked by CDN (Size limit?): ${parts[i]}`);
+      const buffers = [];
+      for (let i = 0; i < parts.length; i++) {
+        const response = await window.originalFetch(parts[i]);
+        
+        if (!response.ok) {
+          if (response.status === 403 || response.status === 404) {
+            throw new Error(`Part missing: ${parts[i]}`);
           }
-          throw new Error(`Failed to load ${parts[i]}: ${responses[i].status}`);
+          throw new Error(`failed to load sowwy (make a report in bug-reports in the discord) ${parts[i]}: ${response.status}`);
         }
+        
+        const buffer = await response.arrayBuffer();
+        buffers.push(buffer);
+        
+        mergeProgress[fileName].current = i + 1;
+        updateLoadingDisplay();
       }
 
-      const buffers = await Promise.all(responses.map(r => r.arrayBuffer()));
       const totalSize = buffers.reduce((sum, buf) => sum + buf.byteLength, 0);
       const mergedArray = new Uint8Array(totalSize);
 
@@ -66,23 +136,22 @@
         offset += buffer.byteLength;
       }
 
-      log(`✅ ${filePath} merged successfully: ${(totalSize / 1024 / 1024).toFixed(2)} MB`);
+      log(` ${filePath} done: ${(totalSize / 1024 / 1024).toFixed(2)} MB`);
       return mergedArray.buffer;
     } catch (err) {
       error(`Failed to merge ${filePath}:`, err);
       throw err;
     }
   }
-
   function shouldInterceptFile(url) {
     const urlStr = normalizeUrl(url);
     if (urlStr.includes('.part')) return null;
 
     for (const file of config.files) {
       const fileName = file.name;
-      const fullPath = config.basePath ? `${config.basePath}${fileName}` : fileName;
-      
-      if (urlsMatch(urlStr, fileName) || urlsMatch(urlStr, fullPath)) {
+      const fullPath = config.basePath ? `${config.basePath}${fileName}` : fileName
+      if (urlsMatch(urlStr, fileName) || urlsMatch(urlStr, fullPath) ||
+          urlsMatch(urlStr, fileName + '.br') || urlsMatch(urlStr, fullPath + '.br')) {
         return fileName;
       }
     }
@@ -97,7 +166,6 @@
     return null;
   }
 
-  // --- FETCH INTERCEPTOR ---
   if (!window.originalFetch) window.originalFetch = window.fetch;
 
   window.fetch = function(url, ...args) {
@@ -106,7 +174,7 @@
     if (filename) {
       log('Intercepting fetch for:', filename);
       return new Promise((resolve, reject) => {
-        const maxWait = 60000; // 60 seconds timeout
+        const maxWait = 60000;
         const startTime = Date.now();
 
         const check = setInterval(() => {
@@ -131,7 +199,6 @@
     return window.originalFetch.call(this, url, ...args);
   };
 
-  // --- XHR INTERCEPTOR ---
   if (!window.OriginalXMLHttpRequest) window.OriginalXMLHttpRequest = window.XMLHttpRequest;
 
   window.XMLHttpRequest = function(options) {
@@ -176,24 +243,27 @@
     };
     return xhr;
   };
-
-  // --- START MERGING ---
   async function autoMergeFiles() {
     if (!config.files.length) return;
+    
+    updateLoadingDisplay();
     
     try {
       const promises = config.files.map(file => {
         const fullPath = config.basePath ? `${config.basePath}${file.name}` : file.name;
         mergeStatus[file.name] = 'merging';
+        updateLoadingDisplay();
         
         return mergeSplitFiles(fullPath, file.parts)
           .then(buffer => {
             window.mergedFiles[file.name] = buffer;
             window.mergedFiles[fullPath] = buffer;
             mergeStatus[file.name] = 'ready';
+            updateLoadingDisplay();
           })
           .catch(err => {
             mergeStatus[file.name] = 'failed';
+            updateLoadingDisplay();
             error(err);
           });
       });
